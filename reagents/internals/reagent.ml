@@ -1,12 +1,11 @@
 
 type ('a, 'b) t = {
     tryReact : 'a -> Reaction.t -> 'b Offer.t option -> 'b option ; (* None stands for Block *)
-    composeI : 'c . ('b, 'c) t -> ('a, 'c) t ;
+    compose : 'c . ('b, 'c) t -> ('a, 'c) t ;
   }
 
 (* for the moment just try without and then with offer; cf scala implem (canSync...) *)
 
-let compose r1 r2 = r1.composeI r2
 
 let run r a =
   match r.tryReact a Reaction.inert None with
@@ -23,19 +22,21 @@ let commit : ('a, 'a) t =
              Some a
            else failwith "Reagent.commit: that shouldn't happen yet, no parallelism."
   in
-  let composeI (type b) (r:('a, b) t) = r
-  in { tryReact ; composeI }
+  let compose (type b) (r:('a, b) t) = r
+  in { tryReact ; compose }
 
 (*
 let rec never () =
   let tryReact a rx offer =
     None
   in
-(*let composeI (type c) (r:(u, c) t) = never () *)
-(*in { tryReact ; composeI } *)
-  let composeI = (fun _ -> never ())
-  in { tryReact ; composeI = Obj.magic composeI }
+(*let compose (type c) (r:(u, c) t) = never () *)
+(*in { tryReact ; compose } *)
+  let compose = (fun _ -> never ())
+  in { tryReact ; compose = Obj.magic compose }
 *)
+
+let pipe r1 r2 = r1.compose r2
 
 let rec choice (r1:('a, 'b) t) (r2:('a, 'b) t) =
   let tryReact a rx offer =
@@ -45,10 +46,10 @@ let rec choice (r1:('a, 'b) t) (r2:('a, 'b) t) =
   in
 (*let compose (type c) (r:('b, c) t) = *)
 (*  (* hmm what is this case Choice thing in the scala code? *) *)
-(*  choice (r1.composeI r) (r2.composeI r) *)
-(*in { tryReact ; composeI } *)
-  let composeI = (fun r -> choice (r1.composeI r) (r2.composeI r))
-  in { tryReact ; composeI = Obj.magic composeI }
+(*  choice (r1.compose r) (r2.compose r) *)
+(*in { tryReact ; compose } *)
+  let compose = (fun r -> choice (r1.compose r) (r2.compose r))
+  in { tryReact ; compose = Obj.magic compose }
 
 (* TODO: post commit => what is this auto cont thing? *)
 

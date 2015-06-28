@@ -32,6 +32,6 @@ let rx_with_abort o rx =
 let try_complete o a = o.state <!= Waiting --> Completed a
 
 let rx_with_completion o rx a =
-  Reaction.add_cas rx o.state ~ov:Waiting ~nv:(Completed a)
+  Reaction.add_cas rx o.state ~expect:Waiting ~update:(Completed a)
 
 (* consume and continue have been moved to reagent.ml to avoid circular dependencies *)
